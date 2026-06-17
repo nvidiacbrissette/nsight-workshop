@@ -2,19 +2,17 @@
 
 Two-hour workshop materials for profiling a PyTorch training pipeline with NVIDIA Nsight Systems, plus an optional Nsight Compute kernel-analysis section.
 
-The workshop now has three notebooks:
+The workshop now has two notebooks:
 
-- `notebooks/01_ml_workflow_to_profile.ipynb` builds the synthetic deep learning workflow and introduces the NVTX ranges.
-- `notebooks/02_nsys_trace_guided_optimization.ipynb` profiles paired problem/reference pipelines and guides attendees through one focused fix at a time.
-- `notebooks/03_ncu_kernel_analysis.ipynb` uses Nsight Compute to inspect selected classifier-head kernels after the Nsight Systems workflow has narrowed the search.
+- `notebooks/01_nsys_trace_guided_optimization.ipynb` introduces the synthetic training pipeline, profiles paired problem/reference implementations, and guides attendees through one focused fix at a time.
+- `notebooks/02_ncu_kernel_analysis.ipynb` uses Nsight Compute to inspect selected classifier-head kernels after the Nsight Systems workflow has narrowed the search.
 
 ## Repository Layout
 
 ```text
 notebooks/
-  01_ml_workflow_to_profile.ipynb
-  02_nsys_trace_guided_optimization.ipynb
-  03_ncu_kernel_analysis.ipynb
+  01_nsys_trace_guided_optimization.ipynb
+  02_ncu_kernel_analysis.ipynb
 profiling_workshop/
   common.py
   data.py
@@ -74,9 +72,8 @@ jupyter lab
 
 Open the notebooks in order:
 
-1. `notebooks/01_ml_workflow_to_profile.ipynb`
-2. `notebooks/02_nsys_trace_guided_optimization.ipynb`
-3. `notebooks/03_ncu_kernel_analysis.ipynb` if you want the optional kernel-level section.
+1. `notebooks/01_nsys_trace_guided_optimization.ipynb`
+2. `notebooks/02_ncu_kernel_analysis.ipynb` if you want the optional kernel-level section.
 
 ## Run the Scripts Directly
 
@@ -126,7 +123,7 @@ Use `nsys profile --gpu-metrics-device=help --duration=1 --trace=none true` to c
 
 ## Workshop Arc
 
-Notebook 01 introduces the workflow and the profiling hooks:
+Notebook 01 starts by introducing the workflow and profiling hooks:
 
 - CPU-side data generation and feature engineering.
 - Host-to-device transfer.
@@ -134,7 +131,7 @@ Notebook 01 introduces the workflow and the profiling hooks:
 - Micro-batched training that creates short-lived kernels.
 - Metric logging that creates synchronization and device-to-host traffic.
 
-Notebook 02 uses the paired modules to inspect and fix the trace one pattern at a time:
+Then it uses the paired modules to inspect and fix the trace one pattern at a time:
 
 - `synchronization.py`: remove unnecessary synchronizes and per-step D2H metric reads.
 - `short_kernels.py`: replace tiny micro-batch optimizer steps with fuller-batch work.
@@ -145,7 +142,7 @@ Each script prints a `RESULT` line for overall throughput and `REGION` lines for
 
 ## Optional Nsight Compute Section
 
-Notebook 03 uses Nsight Compute as a kernel-level microscope after Nsight Systems has identified a GPU range worth inspecting. It intentionally does not ask attendees to rewrite PyTorch or cuBLAS kernels. Instead, it compares two equivalent classifier-head formulations:
+Notebook 02 uses Nsight Compute as a kernel-level microscope after Nsight Systems has identified a GPU range worth inspecting. It intentionally does not ask attendees to rewrite PyTorch or cuBLAS kernels. Instead, it compares two equivalent classifier-head formulations:
 
 - `broadcast-distance`: plausible tensor code that creates more elementwise/reduction work and a larger intermediate.
 - `matmul-distance`: an algebraic rewrite that lets PyTorch route the dominant work into matrix-multiply kernels.
