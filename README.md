@@ -64,6 +64,12 @@ ncu --version
 
 The notebooks still run on CPU for code exploration, but the Nsight Systems and Nsight Compute exercises are intended for CUDA.
 
+### Brev Kernel
+
+On Brev, run `brev_startup.sh` before opening the notebooks. It creates `.venv`, installs PyTorch and the workshop requirements, and registers the Jupyter kernel `Python (profiling-workshop)`.
+
+If a notebook reports `No module named 'torch'`, change the notebook kernel to `Python (profiling-workshop)` and rerun the setup cell. The generic `Python 3` or `base` kernels may not have PyTorch installed.
+
 ## Run the Notebooks
 
 ```bash

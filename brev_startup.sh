@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
 # Brev startup script for the profiling workshop.
@@ -9,10 +9,58 @@ set -euo pipefail
 
 export DEBIAN_FRONTEND="${DEBIAN_FRONTEND:-noninteractive}"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-VENV_DIR="${VENV_DIR:-"${SCRIPT_DIR}/.venv"}"
+SCRIPT_PATH_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+REPO_NAME="${REPO_NAME:-nsight-workshop}"
 KERNEL_NAME="${KERNEL_NAME:-profiling-workshop}"
 KERNEL_DISPLAY_NAME="${KERNEL_DISPLAY_NAME:-Python (profiling-workshop)}"
+
+is_workshop_root() {
+  [ -f "$1/requirements.txt" ] && [ -d "$1/profiling_workshop" ] && [ -d "$1/notebooks" ]
+}
+
+find_workshop_root() {
+  local candidate
+
+  for candidate in \
+    "${WORKSHOP_DIR:-}" \
+    "${REPO_DIR:-}" \
+    "${PROJECT_DIR:-}" \
+    "${BREV_WORKSPACE_DIR:-}" \
+    "${BREADBOARD_WORKSPACE_DIR:-}" \
+    "${WORKSPACE_DIR:-}" \
+    "$PWD" \
+    "$SCRIPT_PATH_DIR"
+  do
+    if [ -n "$candidate" ] && is_workshop_root "$candidate"; then
+      cd -- "$candidate" >/dev/null 2>&1 && pwd
+      return 0
+    fi
+  done
+
+  while IFS= read -r candidate; do
+    if is_workshop_root "$candidate"; then
+      cd -- "$candidate" >/dev/null 2>&1 && pwd
+      return 0
+    fi
+  done < <(find /home /workspace /workspaces -maxdepth 4 -type d -name "$REPO_NAME" 2>/dev/null)
+
+  while IFS= read -r candidate; do
+    candidate="$(dirname "$candidate")"
+    if is_workshop_root "$candidate"; then
+      cd -- "$candidate" >/dev/null 2>&1 && pwd
+      return 0
+    fi
+  done < <(find /home /workspace /workspaces -maxdepth 4 -type f -name requirements.txt 2>/dev/null)
+
+  return 1
+}
+
+SCRIPT_DIR="$(find_workshop_root)" || {
+  printf 'ERROR: Could not find the profiling workshop directory. Set WORKSHOP_DIR to the repo path before running this script.\n' >&2
+  exit 1
+}
+VENV_DIR="${VENV_DIR:-"${SCRIPT_DIR}/.venv"}"
+TRACE_DIR="${TRACE_DIR:-"${SCRIPT_DIR}/traces"}"
 
 log() {
   printf '\n[%s] %s\n' "$(date -u '+%H:%M:%S')" "$*"
@@ -197,12 +245,50 @@ EOF
 fix_workspace_ownership() {
   local owner
 
-  if [ "$(id -u)" -ne 0 ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    if [ -n "${SUDO_UID:-}" ] && [ -n "${SUDO_GID:-}" ]; then
+      owner="${SUDO_UID}:${SUDO_GID}"
+    else
+      owner="$(stat -c '%u:%g' "$SCRIPT_DIR")"
+    fi
+  elif ! have sudo; then
+    return 0
+  else
+    owner="$(id -u):$(id -g)"
+  fi
+
+  if [ -e "$VENV_DIR" ]; then
+    "${SUDO[@]}" chown -R "$owner" "$VENV_DIR"
+  fi
+  if [ -e "$TRACE_DIR" ]; then
+    "${SUDO[@]}" chown -R "$owner" "$TRACE_DIR"
+  fi
+}
+
+make_path_writable() {
+  local path="$1"
+  local owner
+
+  if [ ! -e "$path" ] || [ -w "$path" ]; then
     return 0
   fi
 
-  owner="$(stat -c '%u:%g' "$SCRIPT_DIR")"
-  chown -R "$owner" "$VENV_DIR" "${SCRIPT_DIR}/traces"
+  if [ "$(id -u)" -eq 0 ] || have sudo; then
+    owner="$(id -u):$(id -g)"
+    log "Making ${path} writable for ${owner}"
+    "${SUDO[@]}" chown -R "$owner" "$path"
+  else
+    die "Path is not writable: ${path}. Run this script as the workspace owner or with sudo available."
+  fi
+}
+
+prepare_workspace() {
+  cd "$SCRIPT_DIR"
+
+  make_path_writable "$SCRIPT_DIR"
+  make_path_writable "$VENV_DIR"
+  make_path_writable "$TRACE_DIR"
+  mkdir -p "$TRACE_DIR"
 }
 
 install_system_packages() {
@@ -376,8 +462,7 @@ PY
 }
 
 main() {
-  cd "$SCRIPT_DIR"
-  mkdir -p traces
+  prepare_workspace
 
   install_system_packages
   install_python_packages
