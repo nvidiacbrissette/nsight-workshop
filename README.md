@@ -4,7 +4,7 @@ Two-hour workshop materials for profiling a PyTorch training pipeline with NVIDI
 
 The workshop now has two notebooks:
 
-- `notebooks/01_nsys_trace_guided_optimization.ipynb` introduces the synthetic training pipeline, profiles paired problem/reference implementations, and guides attendees through one focused fix at a time.
+- `notebooks/01_nsys_trace_guided_optimization.ipynb` introduces the synthetic training pipeline, profiles the original and fully fixed bookends, then compares attendee edits with progressive reference checkpoints one focused fix at a time.
 - `notebooks/02_ncu_kernel_analysis.ipynb` uses Nsight Compute to inspect selected classifier-head kernels after the Nsight Systems workflow has narrowed the search.
 
 ## Repository Layout
@@ -18,6 +18,9 @@ profiling_workshop/
   data.py
   pipeline/
     shared.py
+    shared_runner.py
+    checkpoints/
+      orchestrator.py
     problem/
       batching.py
       handoffs.py
@@ -35,6 +38,7 @@ scripts/
   train_optimized.py
   run_original_pipeline.py
   run_problem_pipeline.py
+  run_example_pipeline.py
   run_solution_pipeline.py
   profile_classifier_head.py
 traces/
@@ -101,6 +105,14 @@ Reference solution workload:
 ```bash
 python3 scripts/run_solution_pipeline.py --device cuda --samples 8192 --batch-size 1024 --micro-batches 1 --features 2048 --hidden 4096 --depth 4 --head matmul-distance --num-workers 4 --prefetch-batches 2
 ```
+
+Progressive reference checkpoint:
+
+```bash
+python3 scripts/run_example_pipeline.py --checkpoint kernels --device cuda --samples 8192 --batch-size 128 --micro-batches 16 --features 2048 --hidden 4096 --depth 4 --head broadcast-distance
+```
+
+Available checkpoints are `sync`, `kernels`, `handoff`, and `io`.
 
 The older `scripts/train_baseline.py` and `scripts/train_optimized.py` entry points are kept as aliases for the problem and solution pipelines.
 
