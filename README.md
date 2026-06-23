@@ -33,6 +33,7 @@ profiling_workshop/
 scripts/
   train_baseline.py
   train_optimized.py
+  run_original_pipeline.py
   run_problem_pipeline.py
   run_solution_pipeline.py
   profile_classifier_head.py
@@ -87,6 +88,12 @@ Editable problem workload:
 
 ```bash
 python3 scripts/run_problem_pipeline.py --device cuda --samples 8192 --batch-size 128 --micro-batches 16 --features 2048 --hidden 4096 --depth 4 --head broadcast-distance
+```
+
+Frozen original workload:
+
+```bash
+python3 scripts/run_original_pipeline.py --device cuda --samples 8192 --batch-size 128 --micro-batches 16 --features 2048 --hidden 4096 --depth 4 --head broadcast-distance
 ```
 
 Reference solution workload:
