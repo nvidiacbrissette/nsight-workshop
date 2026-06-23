@@ -48,7 +48,7 @@ class DeviceBatchIterator:
                 x_cpu, y_cpu = self.prepare_batch(raw_batch, self.config)
 
             with self.timer.measure(STAGE_IO):
-                with nvtx_range("issue_4_batch_io_blocking_h2d", self.config.nvtx_enabled):
+                with nvtx_range("issue_2_batch_io_blocking_h2d", self.config.nvtx_enabled):
                     x = x_cpu.to(self.device)
                     y = y_cpu.to(self.device)
 
@@ -56,4 +56,3 @@ class DeviceBatchIterator:
 
     def __len__(self) -> int:
         return loader_batch_count(self.config)
-

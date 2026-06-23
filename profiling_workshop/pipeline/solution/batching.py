@@ -67,7 +67,7 @@ class DeviceBatchIterator:
             with self.timer.measure(STAGE_HANDOFF):
                 x_cpu, y_cpu = self.prepare_batch(raw_batch, self.config)
             with self.timer.measure(STAGE_IO):
-                with nvtx_range("issue_4_batch_io_non_blocking_h2d", self.config.nvtx_enabled):
+                with nvtx_range("issue_2_batch_io_non_blocking_h2d", self.config.nvtx_enabled):
                     # non_blocking=True can avoid synchronizing the training
                     # stream when the source tensors are pinned by the loader.
                     x = x_cpu.to(self.device, non_blocking=True)
@@ -93,7 +93,7 @@ class DeviceBatchIterator:
             event = torch.cuda.Event()
             with self.timer.measure(STAGE_IO):
                 with torch.cuda.stream(stream):
-                    with nvtx_range("issue_4_batch_io_prefetched_h2d", self.config.nvtx_enabled):
+                    with nvtx_range("issue_2_batch_io_prefetched_h2d", self.config.nvtx_enabled):
                         x = x_cpu.to(self.device, non_blocking=True)
                         y = y_cpu.to(self.device, non_blocking=True)
                     # The event marks when this batch is safe for the training

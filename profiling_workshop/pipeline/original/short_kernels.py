@@ -28,7 +28,7 @@ def train_batch(
     micro_batches = max(1, min(config.micro_batches, x.shape[0]))
     for mb_x, mb_y in zip(torch.chunk(x, micro_batches), torch.chunk(y, micro_batches)):
         with timer.measure(STAGE_KERNELS):
-            with nvtx_range("issue_2_short_lived_microbatch_train_step", config.nvtx_enabled):
+            with nvtx_range("issue_3_short_lived_microbatch_train_step", config.nvtx_enabled):
                 optimizer.zero_grad(set_to_none=False)
                 with autocast_for(device, config.amp):
                     logits = model(mb_x)

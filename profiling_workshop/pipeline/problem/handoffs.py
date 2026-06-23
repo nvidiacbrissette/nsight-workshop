@@ -21,8 +21,8 @@ def make_dataset(config: PipelineConfig) -> Dataset[torch.Tensor]:
 
 
 def prepare_batch(raw_batch: torch.Tensor, config: PipelineConfig) -> tuple[torch.Tensor, torch.Tensor]:
-    with nvtx_range("issue_3_cpu_gpu_handoff_main_thread_preprocessing", config.nvtx_enabled):
-        x_cpu = augment_features(raw_batch, config.cpu_work)
+    with nvtx_range("issue_4_cpu_gpu_handoff_main_thread_preprocessing", config.nvtx_enabled):
+        prepared = [augment_features(sample, config.cpu_work) for sample in raw_batch]
+        x_cpu = torch.stack(prepared).contiguous()
         y_cpu = labels_from_features(x_cpu, config.classes)
     return x_cpu, y_cpu
-

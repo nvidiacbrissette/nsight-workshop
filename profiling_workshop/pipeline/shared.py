@@ -15,9 +15,9 @@ from profiling_workshop.common import HEAD_CHOICES, maybe_sync, nvtx_range
 
 
 STAGE_SYNC = "issue_1_synchronization"
-STAGE_KERNELS = "issue_2_short_lived_kernels"
-STAGE_HANDOFF = "issue_3_cpu_gpu_handoff"
-STAGE_IO = "issue_4_batch_io"
+STAGE_IO = "issue_2_batch_io"
+STAGE_KERNELS = "issue_3_short_lived_kernels"
+STAGE_HANDOFF = "issue_4_cpu_gpu_handoff"
 
 
 @dataclass(frozen=True)

@@ -109,10 +109,10 @@ python3 scripts/run_solution_pipeline.py --device cuda --samples 8192 --batch-si
 Progressive reference checkpoint:
 
 ```bash
-python3 scripts/run_example_pipeline.py --checkpoint kernels --device cuda --samples 8192 --batch-size 128 --micro-batches 16 --features 2048 --hidden 4096 --depth 4 --head broadcast-distance
+python3 scripts/run_example_pipeline.py --checkpoint io --device cuda --samples 8192 --batch-size 1024 --micro-batches 16 --features 2048 --hidden 4096 --depth 4 --prefetch-batches 2 --head broadcast-distance
 ```
 
-Available checkpoints are `sync`, `kernels`, `handoff`, and `io`.
+Available checkpoints are `sync`, `io`, `kernels`, and `handoff`.
 
 The older `scripts/train_baseline.py` and `scripts/train_optimized.py` entry points are kept as aliases for the problem and solution pipelines.
 
@@ -156,12 +156,12 @@ Notebook 01 starts by introducing the workflow and profiling hooks:
 - Micro-batched training that creates short-lived kernels.
 - Metric logging that creates synchronization and device-to-host traffic.
 
-Then it uses the paired modules to inspect and fix the trace one pattern at a time:
+Then it uses the paired modules to inspect and fix the trace one pattern at a time, in descending order of observed end-to-end impact:
 
 - `synchronization.py`: remove unnecessary synchronizes and per-step D2H metric reads.
+- `batching.py`: use larger batches, pinned memory, non-blocking copies, and CUDA prefetching.
 - `short_kernels.py`: replace tiny micro-batch optimizer steps with fuller-batch work.
 - `handoffs.py`: move CPU preprocessing into the input side so it can overlap GPU work.
-- `batching.py`: use larger batches, pinned memory, non-blocking copies, and CUDA prefetching.
 
 Each script prints a `RESULT` line for overall throughput and `REGION` lines for the four issue areas. The notebook compares those quick measurements, then captures Nsight Systems traces with NVTX ranges so attendees can verify the timeline pattern directly.
 

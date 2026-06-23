@@ -21,7 +21,7 @@ def make_dataset(config: PipelineConfig) -> Dataset[tuple[torch.Tensor, torch.Te
 
 
 def prepare_batch(raw_batch: tuple[torch.Tensor, torch.Tensor], config: PipelineConfig) -> tuple[torch.Tensor, torch.Tensor]:
-    with nvtx_range("issue_3_cpu_gpu_handoff_prefetched_cpu_batch", config.nvtx_enabled):
+    with nvtx_range("issue_4_cpu_gpu_handoff_prefetched_cpu_batch", config.nvtx_enabled):
         x_cpu, y_cpu = raw_batch
         # Keep this function cheap: the expensive CPU work already happened in
         # the loader side of the pipeline, so the training loop avoids a CPU-only

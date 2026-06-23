@@ -26,7 +26,7 @@ def train_batch(
     timer: StageTimer,
 ) -> None:
     with timer.measure(STAGE_KERNELS):
-        with nvtx_range("issue_2_full_batch_train_step", config.nvtx_enabled):
+        with nvtx_range("issue_3_full_batch_train_step", config.nvtx_enabled):
             # One optimizer step over the full batch gives each launch more work
             # to do. The timeline should show fewer launch clusters and a lower
             # ratio of launch overhead to kernel execution.
